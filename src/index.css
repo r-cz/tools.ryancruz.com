@@ -3,33 +3,65 @@
 @tailwind utilities;
 
 @layer base {
+  /* Set up the theme with proper color schemes */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    color-scheme: light;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+  :root.dark {
+    color-scheme: dark;
   }
-}
 
-/* Ensure proper font loading */
-@supports (font-variation-settings: normal) {
-  html { font-family: 'Inter var', sans-serif; }
-}
+  /* Handle background transitions */
+  body {
+    @apply bg-white;
+    transition: background-color 200ms ease;
+  }
 
-/* Base styles */
-body {
-  @apply bg-background text-foreground antialiased;
+  .dark body {
+    @apply bg-gray-900;
+  }
+
+  /* Text colors should change instantly */
+  body {
+    @apply text-gray-900;
+    transition: background-color 200ms ease;
+  }
+
+  .dark body {
+    @apply text-white;
+  }
+
+  /* Prevent content shift during theme changes */
+  html {
+    min-height: 100vh;
+  }
+
+  /* Only transition background colors and borders, not text */
+  * {
+    @apply border-gray-200;
+    transition-property: background-color, border-color;
+    transition-duration: 200ms;
+    transition-timing-function: ease;
+  }
+
+  .dark * {
+    @apply border-gray-700;
+  }
+
+  /* Remove all transitions from specific elements */
+  img, picture, picture *,
+  h1, h2, h3, h4, h5, h6, p, span, a, button {
+    transition: none !important;
+  }
+
+  /* Card backgrounds should transition smoothly */
+  .bg-white, .bg-gray-800, .bg-gray-900 {
+    transition: background-color 200ms ease;
+  }
+  
+  /* But their text content should not */
+  .bg-white *, .bg-gray-800 *, .bg-gray-900 * {
+    transition: none !important;
+  }
 }

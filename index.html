@@ -7,6 +7,32 @@
     <title>Developer Tools - Ryan Cruz</title>
     <meta name="description" content="A collection of helpful developer tools and utilities" />
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    
+    <!-- Theme initialization script -->
+    <script>
+      (function() {
+        // Set up our initial theme state
+        window.__INITIAL_THEME_STATE__ = {
+          isDark: false,
+          source: 'system'
+        };
+
+        // Determine the initial theme
+        const savedPreference = localStorage.getItem('darkMode');
+        if (savedPreference !== null) {
+          window.__INITIAL_THEME_STATE__.isDark = JSON.parse(savedPreference);
+          window.__INITIAL_THEME_STATE__.source = 'localStorage';
+        } else if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+          window.__INITIAL_THEME_STATE__.isDark = true;
+          window.__INITIAL_THEME_STATE__.source = 'system';
+        }
+
+        // Apply the theme immediately
+        if (window.__INITIAL_THEME_STATE__.isDark) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

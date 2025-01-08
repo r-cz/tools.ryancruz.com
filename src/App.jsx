@@ -1,61 +1,39 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { WrenchScrewdriverIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
+import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
+import ThemeToggle from './components/ThemeToggle';
 
-// We use the 'lazy' function we imported from React instead of React.lazy
+// Lazy load tool components for better initial load performance
 const JWTDecoder = lazy(() => import('./tools/JWTDecoder'));
 const MermaidViewer = lazy(() => import('./tools/MermaidViewer'));
 
 function App() {
-  const [darkMode, setDarkMode] = useState(() => {
-    // Check for system preference and saved preference
-    if (typeof localStorage !== 'undefined' && localStorage.getItem('darkMode') !== null) {
-      return localStorage.getItem('darkMode') === 'true';
-    }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  useEffect(() => {
-    // Update body class and save preference
-    document.documentElement.classList.toggle('dark', darkMode);
-    localStorage.setItem('darkMode', darkMode);
-  }, [darkMode]);
-
   return (
     <Router>
-      <div className="min-h-screen bg-background">
-        <nav className="border-b border-border">
+      <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        <nav className="border-b border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex">
                 <Link to="/" className="flex items-center">
-                  <WrenchScrewdriverIcon className="h-8 w-8 text-primary" />
+                  <WrenchScrewdriverIcon className="h-8 w-8 text-primary-600" />
                   <span className="ml-2 text-xl font-semibold">Dev Tools</span>
                 </Link>
               </div>
               
-              {/* Theme toggle */}
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-                aria-label="Toggle theme"
-              >
-                {darkMode ? (
-                  <SunIcon className="h-5 w-5" />
-                ) : (
-                  <MoonIcon className="h-5 w-5" />
-                )}
-              </button>
+              {/* Theme toggle using our new component */}
+              <div className="flex items-center">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </nav>
 
         <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          {/* We use Suspense instead of React.Suspense */}
           <Suspense 
             fallback={
               <div className="flex items-center justify-center h-32">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
               </div>
             }
           >
@@ -93,7 +71,7 @@ function ToolsList() {
         <Link
           key={tool.path}
           to={tool.path}
-          className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-border"
+          className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700"
         >
           <div className="text-2xl mb-2">{tool.icon}</div>
           <h3 className="text-lg font-semibold">{tool.name}</h3>
