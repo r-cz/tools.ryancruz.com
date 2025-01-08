@@ -9,6 +9,7 @@ This repository houses the code for tools.ryancruz.com, a collection of useful d
 
 ## Technology Stack
 
+- **Runtime**: Bun
 - **Framework**: React 18 with Vite
 - **Routing**: React Router 6
 - **Styling**: TailwindCSS
@@ -19,40 +20,22 @@ This repository houses the code for tools.ryancruz.com, a collection of useful d
 
 ## Development
 
-First, install dependencies:
+First, install dependencies using Bun:
 
 ```bash
-npm install
+bun install
 ```
 
 To start the development server:
 
 ```bash
-npm run dev
+bun dev
 ```
 
 To build for production:
 
 ```bash
-npm run build
-```
-
-## Project Structure
-
-```
-tools.ryancruz.com/
-├── src/
-│   ├── tools/           # Individual tool components
-│   │   ├── JWTDecoder.jsx
-│   │   └── MermaidViewer.jsx
-│   ├── App.jsx         # Main application component
-│   ├── main.jsx        # Application entry point
-│   └── index.css       # Global styles and Tailwind imports
-├── public/             # Static assets
-├── index.html          # HTML entry point
-├── vite.config.js      # Vite configuration
-├── tailwind.config.js  # Tailwind CSS configuration
-└── package.json        # Project dependencies and scripts
+bun run build
 ```
 
 ## Adding New Tools
@@ -95,25 +78,10 @@ const tools = [
 
 ## Deployment
 
-The site is automatically deployed via CloudFlare Pages when changes are pushed to the main branch. The build process is configured to:
+The site is automatically deployed via CloudFlare Pages when changes are pushed to the main branch. The build process:
 
-1. Install dependencies
-2. Build the project
-3. Deploy to CloudFlare's edge network
+1. Installs dependencies using Bun
+2. Builds the project with Vite
+3. Deploys to CloudFlare's edge network
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-Please ensure your PR:
-- Follows the existing code style
-- Includes relevant tests if applicable
-- Updates documentation as needed
-- Has a clear description of the changes
-
-## License
-
-MIT
+The deployment configuration is managed through CloudFlare, with DNS and hosting handled by CloudFlare Pages. Each commit to the main branch triggers an automatic build and deployment process.
