@@ -9,7 +9,6 @@ function JWTDecoder() {
   const [error, setError] = useState('');
   const [showAbout, setShowAbout] = useState(true);
   const textareaRef = useRef(null);
-  const [cursorPosition, setCursorPosition] = useState(0);
 
   // Helper function to safely decode base64 strings that might contain URL-safe characters
   const base64URLDecode = (str) => {
@@ -117,47 +116,19 @@ function JWTDecoder() {
   const TokenInput = ({ value, onChange }) => {
     const handleChange = (e) => {
       onChange(e.target.value);
-      setCursorPosition(e.target.selectionStart);
     };
 
-    // Split the token into its three parts
-    const parts = value.split('.');
-    const spans = parts.map((part, index) => ({
-      text: part,
-      color: index === 0 ? 'text-blue-500 dark:text-blue-400' : 
-             index === 1 ? 'text-purple-500 dark:text-purple-400' :
-                          'text-green-500 dark:text-green-400'
-    }));
-
-    // Effect to maintain cursor position after re-render
-    useEffect(() => {
-      if (textareaRef.current) {
-        textareaRef.current.setSelectionRange(cursorPosition, cursorPosition);
-      }
-    }, [cursorPosition]);
-
     return (
-      <div className="relative">
+      <div className="w-full">
         <textarea
           ref={textareaRef}
           id="token"
           value={value}
           onChange={handleChange}
-          className="w-full h-32 px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-primary focus:border-primary bg-white dark:bg-gray-800 border-border font-mono opacity-0"
+          className="w-full h-32 px-3 py-2 text-sm font-mono bg-white dark:bg-gray-800 border rounded-md focus:ring-2 focus:ring-primary focus:outline-none resize-none"
           placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}
+          spellCheck="false"
         />
-        <div 
-          className="w-full h-32 px-3 py-2 text-sm border rounded-md bg-white dark:bg-gray-800 border-border font-mono overflow-auto whitespace-pre-wrap"
-          aria-hidden="true"
-        >
-          {spans.map((span, index) => (
-            <>
-              <span key={index} className={span.color}>{span.text}</span>
-              {index < spans.length - 1 && <span className="text-gray-400">.</span>}
-            </>
-          ))}
-        </div>
       </div>
     );
   };
@@ -181,7 +152,7 @@ function JWTDecoder() {
 
         <button
           onClick={decodeToken}
-          className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors duration-200 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           Decode Token
         </button>
