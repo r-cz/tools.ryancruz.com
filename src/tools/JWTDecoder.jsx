@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Highlight, themes } from 'prism-react-renderer';
+import * as jose from 'jose';
 
 function JWTDecoder() {
   const [token, setToken] = useState('');
+  const [jwks, setJwks] = useState('');
   const [decodedHeader, setDecodedHeader] = useState(null);
   const [decodedPayload, setDecodedPayload] = useState(null);
+  const [signatureStatus, setSignatureStatus] = useState(null);
   const [error, setError] = useState('');
   const [showAbout, setShowAbout] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(false);
   const textareaRef = useRef(null);
 
   // Helper function to safely decode base64 strings that might contain URL-safe characters
@@ -26,10 +30,44 @@ function JWTDecoder() {
     }
   };
 
-  const decodeToken = () => {
+  const parseAndVerifyJwks = async (jwksContent, token) => {
+    try {
+      // Parse the JWKS content
+      const jwksData = JSON.parse(jwksContent);
+      
+      // Validate that it's a proper JWKS format
+      if (!jwksData.keys || !Array.isArray(jwksData.keys)) {
+        throw new Error('Invalid JWKS format - missing keys array');
+      }
+
+      // Create a local JWKS
+      const JWKS = jose.createLocalJWKSet(jwksData);
+      
+      // Verify the token
+      const { payload, protectedHeader } = await jose.jwtVerify(token, JWKS, {
+        // Support a wide range of algorithms
+        algorithms: ['RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512'],
+      });
+      
+      return { 
+        verified: true, 
+        message: `Signature verified successfully (algorithm: ${protectedHeader.alg}, key ID: ${protectedHeader.kid || 'none'})` 
+      };
+    } catch (err) {
+      console.error('Signature verification failed:', err);
+      return { 
+        verified: false, 
+        message: `Signature verification failed: ${err.message}` 
+      };
+    }
+  };
+
+  const decodeToken = async () => {
     setError('');
     setDecodedHeader(null);
     setDecodedPayload(null);
+    setSignatureStatus(null);
+    setIsVerifying(false);
 
     if (!token.trim()) {
       setError('Please enter a JWT token');
@@ -59,17 +97,28 @@ function JWTDecoder() {
           setError('Warning: This token has expired');
         }
       }
+
+      // If JWKS content is provided, verify the signature
+      if (jwks.trim()) {
+        setIsVerifying(true);
+        try {
+          const verificationResult = await parseAndVerifyJwks(jwks, token);
+          setSignatureStatus(verificationResult);
+        } catch (err) {
+          setError('Invalid JWKS format: ' + err.message);
+        }
+        setIsVerifying(false);
+      }
     } catch (err) {
       setError(err.message || 'Invalid JWT token');
     }
   };
 
-  // Format a JSON object for display
+  // Helper functions for formatting JSON and timestamps
   const formatJSON = (obj) => {
     return JSON.stringify(obj, null, 2);
   };
 
-  // Helper to format Unix timestamps in the payload
   const formatTimestamp = (timestamp) => {
     try {
       const date = new Date(timestamp * 1000);
@@ -79,10 +128,9 @@ function JWTDecoder() {
     }
   };
 
-  // Function to format specific JWT claims
   const formatPayloadDisplay = (payload) => {
+    if (!payload) return '';
     const formatted = { ...payload };
-    // Format standard time-based claims
     ['exp', 'iat', 'nbf'].forEach(claim => {
       if (formatted[claim]) {
         formatted[claim] = `${formatted[claim]} (${formatTimestamp(formatted[claim])})`;
@@ -91,7 +139,7 @@ function JWTDecoder() {
     return formatJSON(formatted);
   };
 
-  // Component for syntax-highlighted JSON
+  // Components for displaying JSON and token input
   const JsonDisplay = ({ content }) => (
     <Highlight
       theme={themes.nightOwl}
@@ -112,54 +160,74 @@ function JWTDecoder() {
     </Highlight>
   );
 
-  // Custom TokenInput component that shows the JWT parts in different colors
-  const TokenInput = ({ value, onChange }) => {
-    const handleChange = (e) => {
-      onChange(e.target.value);
-    };
-
-    return (
-      <div className="w-full">
-        <textarea
-          ref={textareaRef}
-          id="token"
-          value={value}
-          onChange={handleChange}
-          className="w-full h-32 px-3 py-2 text-sm font-mono bg-white dark:bg-gray-800 border rounded-md focus:ring-2 focus:ring-primary focus:outline-none resize-none"
-          placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          spellCheck="false"
-        />
-      </div>
-    );
-  };
+  const TokenInput = ({ value, onChange, placeholder, label }) => (
+    <div className="w-full">
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full h-32 px-3 py-2 text-sm font-mono bg-white dark:bg-gray-800 border rounded-md focus:ring-2 focus:ring-primary focus:outline-none resize-none"
+        placeholder={placeholder}
+        spellCheck="false"
+      />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">JWT Decoder</h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Paste your JWT token below to decode its contents
+          Paste your JWT token and optionally provide JWKS content for signature verification
         </p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label htmlFor="token" className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium mb-1">
             JWT Token
           </label>
-          <TokenInput value={token} onChange={setToken} />
+          <TokenInput 
+            value={token} 
+            onChange={setToken}
+            placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            JWKS Content (optional)
+          </label>
+          <TokenInput 
+            value={jwks} 
+            onChange={setJwks}
+            placeholder={'{\n  "keys": [\n    {\n      "kty": "RSA",\n      "kid": "...",\n      ...\n    }\n  ]\n}'}
+          />
+          <p className="mt-1 text-sm text-gray-500">
+            Paste the content of your JWKS endpoint to verify the token's signature
+          </p>
         </div>
 
         <button
           onClick={decodeToken}
-          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors duration-200 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          disabled={isVerifying}
+          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 transition-colors duration-200 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
-          Decode Token
+          {isVerifying ? 'Verifying...' : 'Decode Token'}
         </button>
 
         {error && (
           <div className="p-4 text-sm border rounded-md bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400">
             {error}
+          </div>
+        )}
+
+        {signatureStatus && (
+          <div className={`p-4 text-sm border rounded-md ${
+            signatureStatus.verified 
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-600 dark:text-green-400'
+              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
+          }`}>
+            {signatureStatus.message}
           </div>
         )}
 
@@ -206,6 +274,22 @@ function JWTDecoder() {
             <li className="text-purple-500 dark:text-purple-400">• Payload: Contains the claims (data)</li>
             <li className="text-green-500 dark:text-green-400">• Signature: Verifies the token hasn't been altered</li>
           </ul>
+          <div className="mt-4">
+            <h3 className="text-sm font-semibold mb-1">Signature Verification</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              To verify a token's signature, you'll need the JWKS (JSON Web Key Set) content from your identity provider.
+              You can typically find this at endpoints like:
+            </p>
+            <ul className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <li>• Auth0: https://YOUR_DOMAIN/.well-known/jwks.json</li>
+              <li>• Okta: https://YOUR_DOMAIN/oauth2/default/v1/keys</li>
+              <li>• Azure AD: https://login.microsoftonline.com/TENANT_ID/discovery/v2.0/keys</li>
+            </ul>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Visit these URLs in your browser, copy the JSON content, and paste it into the JWKS Content field above
+              to verify your token's signature.
+            </p>
+          </div>
         </div>
       )}
     </div>
