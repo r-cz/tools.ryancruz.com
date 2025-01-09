@@ -21,7 +21,7 @@ function JWTDecoder() {
     // Pad with '=' if needed
     const pad = base64.length % 4;
     const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
-    
+
     try {
       // Decode and convert to UTF-8 string
       return decodeURIComponent(escape(atob(padded)));
@@ -34,7 +34,7 @@ function JWTDecoder() {
     try {
       // Parse the JWKS content
       const jwksData = JSON.parse(jwksContent);
-      
+
       // Validate that it's a proper JWKS format
       if (!jwksData.keys || !Array.isArray(jwksData.keys)) {
         throw new Error('Invalid JWKS format - missing keys array');
@@ -42,22 +42,22 @@ function JWTDecoder() {
 
       // Create a local JWKS
       const JWKS = jose.createLocalJWKSet(jwksData);
-      
+
       // Verify the token
       const { payload, protectedHeader } = await jose.jwtVerify(token, JWKS, {
         // Support a wide range of algorithms
         algorithms: ['RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512'],
       });
-      
-      return { 
-        verified: true, 
-        message: `Signature verified successfully (algorithm: ${protectedHeader.alg}, key ID: ${protectedHeader.kid || 'none'})` 
+
+      return {
+        verified: true,
+        message: `Signature verified successfully (algorithm: ${protectedHeader.alg}, key ID: ${protectedHeader.kid || 'none'})`
       };
     } catch (err) {
       console.error('Signature verification failed:', err);
-      return { 
-        verified: false, 
-        message: `Signature verification failed: ${err.message}` 
+      return {
+        verified: false,
+        message: `Signature verification failed: ${err.message}`
       };
     }
   };
@@ -186,8 +186,8 @@ function JWTDecoder() {
           <label className="block text-sm font-medium mb-1">
             JWT Token
           </label>
-          <TokenInput 
-            value={token} 
+          <TokenInput
+            value={token}
             onChange={setToken}
             placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           />
@@ -197,8 +197,8 @@ function JWTDecoder() {
           <label className="block text-sm font-medium mb-1">
             JWKS Content (optional)
           </label>
-          <TokenInput 
-            value={jwks} 
+          <TokenInput
+            value={jwks}
             onChange={setJwks}
             placeholder={'{\n  "keys": [\n    {\n      "kty": "RSA",\n      "kid": "...",\n      ...\n    }\n  ]\n}'}
           />
@@ -222,11 +222,10 @@ function JWTDecoder() {
         )}
 
         {signatureStatus && (
-          <div className={`p-4 text-sm border rounded-md ${
-            signatureStatus.verified 
+          <div className={`p-4 text-sm border rounded-md ${signatureStatus.verified
               ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-600 dark:text-green-400'
               : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
-          }`}>
+            }`}>
             {signatureStatus.message}
           </div>
         )}
@@ -266,7 +265,7 @@ function JWTDecoder() {
             >
               RFC 7519
             </a>
-            ) that define a compact and self-contained way for securely transmitting 
+            ) that define a compact and self-contained way for securely transmitting
             information between parties as a JSON object. JWTs consist of three parts:
           </p>
           <ul className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
@@ -281,6 +280,7 @@ function JWTDecoder() {
               You can typically find this at endpoints like:
             </p>
             <ul className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <li>• PingFederate: https://YOUR_DOMAIN/pf/JWKS</li>
               <li>• Auth0: https://YOUR_DOMAIN/.well-known/jwks.json</li>
               <li>• Okta: https://YOUR_DOMAIN/oauth2/default/v1/keys</li>
               <li>• Azure AD: https://login.microsoftonline.com/TENANT_ID/discovery/v2.0/keys</li>
