@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { SunIcon, MoonIcon, ComputerDesktopIcon } from '@heroicons/react/24/outline';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme, ThemeState } from '../contexts/ThemeContext';
 
 const ThemeToggle = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef();
+  const menuRef = useRef<HTMLDivElement>(null);
   const [themeState, setThemeState] = useTheme();
 
   // Close menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -19,7 +19,7 @@ const ThemeToggle = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const setTheme = (isDark, source) => {
+  const setTheme = (isDark: boolean, source: ThemeState['source']) => {
     setThemeState({
       isDark,
       source

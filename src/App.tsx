@@ -7,6 +7,13 @@ import ThemeToggle from './components/ThemeToggle';
 const JWTDecoder = lazy(() => import('./tools/JWTDecoder'));
 const MermaidViewer = lazy(() => import('./tools/MermaidViewer'));
 
+interface Tool {
+  name: string;
+  description: string;
+  path: string;
+  icon: string;
+}
+
 function App() {
   return (
     <Router>
@@ -20,7 +27,7 @@ function App() {
                   <span className="ml-2 text-xl font-semibold">Dev Tools</span>
                 </Link>
               </div>
-              
+
               {/* Theme toggle using our new component */}
               <div className="flex items-center">
                 <ThemeToggle />
@@ -30,7 +37,7 @@ function App() {
         </nav>
 
         <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <Suspense 
+          <Suspense
             fallback={
               <div className="flex items-center justify-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -50,7 +57,7 @@ function App() {
 }
 
 function ToolsList() {
-  const tools = [
+  const tools: Tool[] = [
     {
       name: 'JWT Decoder',
       description: 'Decode and verify JWT tokens with ease',

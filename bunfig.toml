@@ -1,6 +1,1 @@
-[install]
-peer = true
-production = false
-
-[install.scopes]
-react = "https://registry.npmjs.org/"
+entrypoints = ["src/main.tsx"]

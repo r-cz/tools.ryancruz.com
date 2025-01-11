@@ -2,17 +2,22 @@ import { useState, useEffect, useCallback } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import mermaid from 'mermaid';
 
+interface Example {
+  name: string;
+  code: string;
+}
+
 function MermaidViewer() {
-  const [code, setCode] = useState(
+  const [code, setCode] = useState<string>(
     'graph TD\n  A[Start] --> B{Is it working?}\n  B -->|Yes| C[Great!]\n  B -->|No| D[Debug]\n  D --> B'
   );
-  const [svg, setSvg] = useState('');
-  const [error, setError] = useState('');
-  const [selectedExample, setSelectedExample] = useState(null);
-  const [darkMode, setDarkMode] = useState(
+  const [svg, setSvg] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [selectedExample, setSelectedExample] = useState<string | null>(null);
+  const [darkMode, setDarkMode] = useState<boolean>(
     document.documentElement.classList.contains('dark')
   );
-  const [showAbout, setShowAbout] = useState(true);
+  const [showAbout, setShowAbout] = useState<boolean>(true);
 
   // Initialize mermaid with configuration when component mounts or dark mode changes
   useEffect(() => {
@@ -73,7 +78,7 @@ function MermaidViewer() {
   }, [code, renderDiagram]);
 
   // Predefined examples that users can try
-  const examples = [
+  const examples: Example[] = [
     {
       name: 'Flowchart',
       code: `flowchart LR
@@ -114,7 +119,7 @@ function MermaidViewer() {
     }
   ];
 
-  const loadExample = (example) => {
+  const loadExample = (example: Example) => {
     setSelectedExample(example.name);
     setCode(example.code);
   };
@@ -135,11 +140,10 @@ function MermaidViewer() {
               <button
                 key={example.name}
                 onClick={() => loadExample(example)}
-                className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                  selectedExample === example.name
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${selectedExample === example.name
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
               >
                 {example.name}
               </button>
@@ -168,9 +172,9 @@ function MermaidViewer() {
               {error}
             </div>
           ) : svg ? (
-            <div 
+            <div
               className="p-4 bg-white dark:bg-gray-800 rounded-md shadow overflow-auto border border-border"
-              dangerouslySetInnerHTML={{ __html: svg }} 
+              dangerouslySetInnerHTML={{ __html: svg }}
             />
           ) : (
             <div className="p-4 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-md border border-border">
@@ -191,9 +195,9 @@ function MermaidViewer() {
           </button>
           <h2 className="text-lg font-semibold mb-2">About Mermaid Diagrams</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Mermaid lets you create diagrams and visualizations using text and code. 
-            It supports many diagram types including flowcharts, sequence diagrams, 
-            class diagrams, state diagrams, and more. The syntax is simple and 
+            Mermaid lets you create diagrams and visualizations using text and code.
+            It supports many diagram types including flowcharts, sequence diagrams,
+            class diagrams, state diagrams, and more. The syntax is simple and
             markdown-like, making it easy to maintain and version control your diagrams.
           </p>
           <div className="mt-2">
