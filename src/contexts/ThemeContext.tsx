@@ -1,11 +1,24 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+// Define the shape of our theme state
+export interface ThemeState {
+  isDark: boolean;
+  source: 'system' | 'user' | 'localStorage';
+}
+
+// Define the shape of our context value
+type ThemeContextValue = [ThemeState, React.Dispatch<React.SetStateAction<ThemeState>>];
 
 // Create our context with a meaningful default value of null
-const ThemeContext = createContext(null);
+const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-export function ThemeProvider({ children }) {
+interface ThemeProviderProps {
+  children: ReactNode;
+}
+
+export function ThemeProvider({ children }: ThemeProviderProps) {
   // Initialize state from our global variable, which will be set by our early script
-  const [themeState, setThemeState] = useState(() => {
+  const [themeState, setThemeState] = useState<ThemeState>(() => {
     // If window.__INITIAL_THEME_STATE__ doesn't exist yet (during SSR), provide fallback values
     return window.__INITIAL_THEME_STATE__ ?? {
       isDark: false,
@@ -28,7 +41,7 @@ export function ThemeProvider({ children }) {
     if (themeState.source !== 'system') return;
     
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e) => {
+    const handleChange = (e: MediaQueryListEvent) => {
       setThemeState(prev => ({
         ...prev,
         isDark: e.matches

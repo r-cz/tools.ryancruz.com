@@ -3,19 +3,28 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Highlight, themes } from 'prism-react-renderer';
 import * as jose from 'jose';
 
+interface DecodedPart {
+  [key: string]: any;
+}
+
+interface SignatureStatus {
+  verified: boolean;
+  message: string;
+}
+
 function JWTDecoder() {
-  const [token, setToken] = useState('');
-  const [jwks, setJwks] = useState('');
-  const [decodedHeader, setDecodedHeader] = useState(null);
-  const [decodedPayload, setDecodedPayload] = useState(null);
-  const [signatureStatus, setSignatureStatus] = useState(null);
-  const [error, setError] = useState('');
-  const [showAbout, setShowAbout] = useState(true);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const textareaRef = useRef(null);
+  const [token, setToken] = useState<string>('');
+  const [jwks, setJwks] = useState<string>('');
+  const [decodedHeader, setDecodedHeader] = useState<DecodedPart | null>(null);
+  const [decodedPayload, setDecodedPayload] = useState<DecodedPart | null>(null);
+  const [signatureStatus, setSignatureStatus] = useState<SignatureStatus | null>(null);
+  const [error, setError] = useState<string>('');
+  const [showAbout, setShowAbout] = useState<boolean>(true);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Helper function to safely decode base64 strings that might contain URL-safe characters
-  const base64URLDecode = (str) => {
+  const base64URLDecode = (str: string): string => {
     // Convert base64url to base64 by replacing URL-safe characters
     const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
     // Pad with '=' if needed
@@ -30,7 +39,7 @@ function JWTDecoder() {
     }
   };
 
-  const parseAndVerifyJwks = async (jwksContent, token) => {
+  const parseAndVerifyJwks = async (jwksContent: string, token: string): Promise<SignatureStatus> => {
     try {
       // Parse the JWKS content
       const jwksData = JSON.parse(jwksContent);
@@ -54,11 +63,19 @@ function JWTDecoder() {
         message: `Signature verified successfully (algorithm: ${protectedHeader.alg}, key ID: ${protectedHeader.kid || 'none'})`
       };
     } catch (err) {
-      console.error('Signature verification failed:', err);
-      return {
-        verified: false,
-        message: `Signature verification failed: ${err.message}`
-      };
+      if (err instanceof Error) {
+        console.error('Signature verification failed:', err);
+        return {
+          verified: false,
+          message: `Signature verification failed: ${err.message}`
+        };
+      } else {
+        console.error('Signature verification failed:', err);
+        return {
+          verified: false,
+          message: `Signature verification failed: An unknown error occurred`
+        };
+      }
     }
   };
 
@@ -105,30 +122,30 @@ function JWTDecoder() {
           const verificationResult = await parseAndVerifyJwks(jwks, token);
           setSignatureStatus(verificationResult);
         } catch (err) {
-          setError('Invalid JWKS format: ' + err.message);
+          setError('Invalid JWKS format: ' + (err instanceof Error ? err.message : 'An unknown error occurred'));
         }
         setIsVerifying(false);
       }
     } catch (err) {
-      setError(err.message || 'Invalid JWT token');
+      setError((err instanceof Error ? err.message : 'Invalid JWT token') || 'Invalid JWT token');
     }
   };
 
   // Helper functions for formatting JSON and timestamps
-  const formatJSON = (obj) => {
+  const formatJSON = (obj: DecodedPart): string => {
     return JSON.stringify(obj, null, 2);
   };
 
-  const formatTimestamp = (timestamp) => {
+  const formatTimestamp = (timestamp: number): string => {
     try {
       const date = new Date(timestamp * 1000);
       return date.toLocaleString();
     } catch {
-      return timestamp;
+      return timestamp.toString();
     }
   };
 
-  const formatPayloadDisplay = (payload) => {
+  const formatPayloadDisplay = (payload: DecodedPart | null): string => {
     if (!payload) return '';
     const formatted = { ...payload };
     ['exp', 'iat', 'nbf'].forEach(claim => {
@@ -140,7 +157,7 @@ function JWTDecoder() {
   };
 
   // Components for displaying JSON and token input
-  const JsonDisplay = ({ content }) => (
+  const JsonDisplay: React.FC<{ content: string }> = ({ content }) => (
     <Highlight
       theme={themes.nightOwl}
       code={content}
@@ -149,9 +166,9 @@ function JWTDecoder() {
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
         <pre className={`${className} p-4 text-sm rounded-md overflow-auto border border-border`} style={style}>
           {tokens.map((line, i) => (
-            <div key={i} {...getLineProps({ line })}>
+            <div key={i} {...getLineProps({ line, key: i })}>
               {line.map((token, key) => (
-                <span key={key} {...getTokenProps({ token })} />
+                <span key={key} {...getTokenProps({ token, key })} />
               ))}
             </div>
           ))}
@@ -160,7 +177,12 @@ function JWTDecoder() {
     </Highlight>
   );
 
-  const TokenInput = ({ value, onChange, placeholder, label }) => (
+  const TokenInput: React.FC<{
+    value: string;
+    onChange: (value: string) => void;
+    placeholder: string;
+    label: string;
+  }> = ({ value, onChange, placeholder }) => (
     <div className="w-full">
       <textarea
         value={value}
@@ -223,8 +245,8 @@ function JWTDecoder() {
 
         {signatureStatus && (
           <div className={`p-4 text-sm border rounded-md ${signatureStatus.verified
-              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-600 dark:text-green-400'
-              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
+            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-600 dark:text-green-400'
+            : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400'
             }`}>
             {signatureStatus.message}
           </div>
